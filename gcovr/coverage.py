@@ -281,6 +281,21 @@ class ConditionCoverage:
         self.not_covered_false = not_covered_false
         self.excluded = excluded
 
+    @property
+    def is_excluded(self) -> bool:
+        """Return True if the condition is excluded."""
+        return self.excluded
+
+    @property
+    def is_reportable(self) -> bool:
+        """Return True if the condition is not excluded."""
+        return not self.excluded
+
+    @property
+    def is_covered(self) -> bool:
+        """Return True if the condition is covered."""
+        return self.is_reportable and self.covered > 0
+
 
 class DecisionCoverageUncheckable:
     r"""Represent coverage information about a decision."""
@@ -517,23 +532,28 @@ class LineCoverage:
 
     def branch_coverage(self) -> CoverageStat:
         """Return the branch coverage statistic of the line."""
-        total = 0
+        total = len(self.branches.values())
         covered = 0
+        excluded = 0
         for branchcov in self.branches.values():
-            if branchcov.is_reportable:
-                total += 1
-                if branchcov.is_covered:
-                    covered += 1
-        return CoverageStat(covered=covered, total=total)
+            if branchcov.is_excluded:
+                excluded += 1
+            if branchcov.is_covered:
+                covered += 1
+        return CoverageStat(covered=covered, total=total, excluded=excluded)
 
     def condition_coverage(self) -> CoverageStat:
         """Return the condition coverage statistic of the line."""
-        total = 0
+        total = sum(condition.count for condition in self.conditions.values())
         covered = 0
+        excluded = 0
         for condition in self.conditions.values():
-            total += condition.count
-            covered += condition.covered
-        return CoverageStat(covered=covered, total=total)
+            if condition.is_excluded:
+                excluded += condition.count
+            if condition.is_covered:
+                covered += condition.covered
+
+        return CoverageStat(covered=covered, total=total, excluded=0)
 
     def decision_coverage(self) -> DecisionCoverageStat:
         """Return the decision coverage statistic of the line."""
@@ -603,36 +623,38 @@ class FileCoverage:
         """Return the function coverage statistic of the file."""
         total = 0
         covered = 0
+        excluded = 0
 
         for functioncov in self.functions.values():
-            for lineno, excluded in functioncov.excluded.items():
-                if not excluded:
-                    total += 1
-                    if functioncov.count[lineno] > 0:
-                        covered += 1
+            total += len(self.functions.values())
+            for lineno, exclude in functioncov.excluded.items():
+                if exclude:
+                    excluded += 1
+                if functioncov.count[lineno] > 0:
+                    covered += 1
 
-        return CoverageStat(covered, total)
+        return CoverageStat(covered=covered, total=total, excluded=excluded)
 
     def line_coverage(self) -> CoverageStat:
         """Return the line coverage statistic of the file."""
-        total = 0
+        total = len(self.lines.values())
         covered = 0
+        excluded = 0
 
         for linecov in self.lines.values():
-            if linecov.is_reportable:
-                total += 1
-                if linecov.is_covered:
-                    covered += 1
+            if linecov.is_excluded:
+                excluded += 1
+            if linecov.is_covered:
+                covered += 1
 
-        return CoverageStat(covered, total)
+        return CoverageStat(covered=covered, total=total, excluded=excluded)
 
     def branch_coverage(self) -> CoverageStat:
         """Return the branch coverage statistic of the file."""
         stat = CoverageStat.new_empty()
 
         for linecov in self.lines.values():
-            if linecov.is_reportable:
-                stat += linecov.branch_coverage()
+            stat += linecov.branch_coverage()
 
         return stat
 
@@ -641,8 +663,7 @@ class FileCoverage:
         stat = CoverageStat.new_empty()
 
         for linecov in self.lines.values():
-            if linecov.is_reportable:
-                stat += linecov.condition_coverage()
+            stat += linecov.condition_coverage()
 
         return stat
 
@@ -651,25 +672,26 @@ class FileCoverage:
         stat = DecisionCoverageStat.new_empty()
 
         for linecov in self.lines.values():
-            if linecov.is_reportable:
-                stat += linecov.decision_coverage()
+            stat += linecov.decision_coverage()
 
         return stat
 
     def call_coverage(self) -> CoverageStat:
         """Return the call coverage statistic of the file."""
-        covered = 0
         total = 0
+        covered = 0
+        excluded = 0
 
         for linecov in self.lines.values():
-            if linecov.is_reportable and len(linecov.calls) > 0:
+            if len(linecov.calls) > 0:
+                total += len(linecov.calls.values())
                 for callcov in linecov.calls.values():
-                    if callcov.is_reportable:
-                        total += 1
-                        if callcov.is_covered:
-                            covered += 1
+                    if callcov.is_excluded:
+                        excluded += 1
+                    if callcov.is_covered:
+                        covered += 1
 
-        return CoverageStat(covered, total)
+        return CoverageStat(covered=covered, total=total, excluded=excluded)
 
 
 CovData = Dict[str, FileCoverage]
@@ -857,12 +879,15 @@ class CoverageStat:
     """How many elements were covered."""
 
     total: int
-    """How many elements there were in total."""
+    """How many elements there were in total including excluded items."""
+
+    excluded: int
+    """How many elements were excluded."""
 
     @staticmethod
     def new_empty() -> CoverageStat:
         """Create a empty coverage statistic."""
-        return CoverageStat(0, 0)
+        return CoverageStat(0, 0, 0)
 
     @property
     def percent(self) -> Optional[float]:
@@ -873,17 +898,17 @@ class CoverageStat:
         """Percentage of covered elements.
 
         Coverage is truncated to one decimal:
-        >>> CoverageStat(1234, 10000).percent_or("default")
+        >>> CoverageStat(1234, 10000, 0).percent_or("default")
         12.3
 
         Coverage is capped at 99.9% unless everything is covered:
-        >>> CoverageStat(9999, 10000).percent_or("default")
+        >>> CoverageStat(9999, 10000, 0).percent_or("default")
         99.9
-        >>> CoverageStat(10000, 10000).percent_or("default")
+        >>> CoverageStat(10000, 10000, 0).percent_or("default")
         100.0
 
         If there are no elements, percentage is NaN and the default will be returned:
-        >>> CoverageStat(0, 0).percent_or("default")
+        >>> CoverageStat(0, 0, 0).percent_or("default")
         'default'
         """
         if not self.total:
@@ -900,6 +925,7 @@ class CoverageStat:
 
     def __iadd__(self, other: CoverageStat) -> CoverageStat:
         self.covered += other.covered
+        self.excluded += other.excluded
         self.total += other.total
         return self
 
@@ -920,7 +946,7 @@ class DecisionCoverageStat:
     @property
     def to_coverage_stat(self) -> CoverageStat:
         """Convert a decision coverage statistic to a coverage statistic."""
-        return CoverageStat(covered=self.covered, total=self.total)
+        return CoverageStat(covered=self.covered, total=self.total, excluded=0)
 
     @property
     def percent(self) -> Optional[float]:

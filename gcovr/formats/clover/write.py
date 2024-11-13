@@ -38,7 +38,7 @@ LOGGER = logging.getLogger("gcovr")
 
 
 def write_report(covdata: CovData, output_file: str, options: Options) -> None:
-    """produce an XML report in the Cobertura format"""
+    """produce an XML report in the Clover format"""
 
     timestamp = str(int(options.timestamp.timestamp()))
 
@@ -82,11 +82,10 @@ def write_report(covdata: CovData, output_file: str, options: Options) -> None:
         covered_elements = 0
         for linecov in data.lines.values():
             loc = linecov.lineno
-            if linecov.is_reportable:
-                ncloc += 1
-                if linecov.is_covered:
-                    covered_elements += 1
-                file_elem.append(_line_element(linecov))
+            ncloc += 1
+            if linecov.is_covered:
+                covered_elements += 1
+            file_elem.append(_line_element(linecov))
 
         file_elem.set("name", fname)
         file_elem.set("path", filename)

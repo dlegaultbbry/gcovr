@@ -39,17 +39,16 @@ def write_report(covdata: CovData, output_file: str, options: Options) -> None:
         file_node.set("path", filename)
 
         for lineno, linecov in data.lines.items():
-            if linecov.is_reportable:
-                line_node = etree.Element("lineToCover")
-                line_node.set("lineNumber", str(lineno))
-                line_node.set("covered", "true" if linecov.is_covered else "false")
+            line_node = etree.Element("lineToCover")
+            line_node.set("lineNumber", str(lineno))
+            line_node.set("covered", "true" if linecov.is_covered else "false")
 
-                if linecov.branches:
-                    stat = linecov.branch_coverage()
-                    line_node.set("branchesToCover", str(stat.total))
-                    line_node.set("coveredBranches", str(stat.covered))
+            if linecov.branches:
+                stat = linecov.branch_coverage()
+                line_node.set("branchesToCover", str(stat.total))
+                line_node.set("coveredBranches", str(stat.covered))
 
-                file_node.append(line_node)
+            file_node.append(line_node)
 
         root.append(file_node)
 

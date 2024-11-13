@@ -18,6 +18,7 @@ New features and notable changes:
 - Extend logging for data merge errors with info about the data sources. (:issue:`1010`)
 - Add condition coverage merge mode option :option:`--merge-mode-conditions` (:issue:`1009`)
 - Add :option:`--gcov-suspicious-hits-threshold` to configure the value for detecting suspicious hits in GCOV files. (:issue:`1021`)
+- Item totals now include excluded items (:issue:`1027`)
 
 Bug fixes and small improvements:
 

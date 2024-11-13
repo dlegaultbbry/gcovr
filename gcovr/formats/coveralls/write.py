@@ -215,7 +215,7 @@ def _make_source_file(coverage_details: FileCoverage, options) -> Dict[str, Any]
         # be reported to coveralls (fill missing lines)
         _extend_with_none(coverage, lineno - 1)
 
-        coverage.append(linecov.count if linecov.is_reportable else None)
+        coverage.append(linecov.count)
 
         # Record branch information (INCOMPLETE/OMITTED)
         # branch_details = linecov.branches

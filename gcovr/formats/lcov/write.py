@@ -89,15 +89,14 @@ def write_report(covdata: CovData, output_file: str, options: Options) -> None:
             branches = 0
             branch_hits = 0
             for lineno, linecov in filecov.lines.items():
-                if linecov.is_reportable:
-                    branches += len(linecov.branches)
-                    for branchno, branchcov in linecov.branches.items():
-                        if branchcov.count:
-                            branch_hits += 1
-                        # BRDA:<line_number>,[<exception>]<block>,<branch>,<taken>
-                        fh.write(
-                            f"BRDA:{lineno},{'e' if branchcov.throw else ''}{branchcov.blockno_or_0},{branchno},{branchcov.count if branchcov.count else '-'}\n"
-                        )
+                branches += len(linecov.branches)
+                for branchno, branchcov in linecov.branches.items():
+                    if branchcov.count:
+                        branch_hits += 1
+                    # BRDA:<line_number>,[<exception>]<block>,<branch>,<taken>
+                    fh.write(
+                        f"BRDA:{lineno},{'e' if branchcov.throw else ''}{branchcov.blockno_or_0},{branchno},{branchcov.count if branchcov.count else '-'}\n"
+                    )
 
             # BRF:<number of branches found>
             fh.write(f"BRF:{branches}\n")
@@ -106,11 +105,10 @@ def write_report(covdata: CovData, output_file: str, options: Options) -> None:
 
             lines_covered = 0
             for lineno, linecov in filecov.lines.items():
-                if linecov.is_reportable:
-                    if linecov.count:
-                        lines_covered += 1
-                    # DA:<line number>,<execution count>[,<checksum>]
-                    fh.write(f"DA:{lineno},{linecov.count},{linecov.md5}\n")
+                if linecov.count:
+                    lines_covered += 1
+                # DA:<line number>,<execution count>[,<checksum>]
+                fh.write(f"DA:{lineno},{linecov.count},{linecov.md5}\n")
 
             stats = SummarizedStats.from_file(filecov)
             # LH:<number of lines with a non\-zero execution count>

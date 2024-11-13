@@ -58,8 +58,7 @@ def write_report(covdata: CovData, output_file: str, options: Options) -> None:
         lines_elem = etree.SubElement(class_elem, "lines")
 
         for linecov in filecov.lines.values():
-            if linecov.is_reportable:
-                lines_elem.append(_line_element(linecov))
+            lines_elem.append(_line_element(linecov))
 
         stats = SummarizedStats.from_file(filecov)
 
