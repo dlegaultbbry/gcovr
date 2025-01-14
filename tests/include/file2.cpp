@@ -1,6 +1,6 @@
 #include "included_header.h"
 
-int bar()
+int baz()
 {
 return 0;
 }

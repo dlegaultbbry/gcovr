@@ -10,7 +10,7 @@ run: json txt lcov cobertura html sonarqube jacoco coveralls
 
 coverage.json:
 	./testcase
-	$(GCOVR) -v -i 'file1\.cpp'  --json-pretty --json $@
+	$(GCOVR) -v -i '.*\.(h|cpp)$$'  --json-pretty --json $@
 
 json: coverage.json
 

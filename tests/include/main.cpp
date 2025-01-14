@@ -1,6 +1,5 @@
 #include <iostream>
-
-int bar();
+#include "included_header.h"
 
 int foo(int param) {
   if (param) {
@@ -13,6 +12,7 @@ int foo(int param) {
 
 int main(int argc, char* argv[]) {
   foo(bar());
+  //foo(buzz());
 
   return 0;
 }
