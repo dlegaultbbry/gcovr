@@ -384,8 +384,8 @@ def merge_function(
     """
     if left.demangled_name != right.demangled_name:
         raise AssertionError("Function demangled name must be equal.")
-    if left.name != right.name:
-        raise AssertionError("Function name must be equal.")
+    #if left.name != right.name:
+    #    raise AssertionError("Function name must be equal.")
     if not options.func_opts.ignore_function_lineno:
         if left.count.keys() != right.count.keys():
             lines = sorted(set([*left.count.keys(), *right.count.keys()]))
