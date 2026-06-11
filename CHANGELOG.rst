@@ -10,6 +10,9 @@ Next Release
 
 Breaking changes:
 
+- The option :option:`--merge-lines` requires a value now. The default is set to `no` for backwards
+  compatibility if it was not included before. (:issue:`unknown`)
+
 New features and notable changes:
 
 - Improve HTML report:
@@ -22,6 +25,7 @@ New features and notable changes:
 - Add compare mode for JSON, text and HTML reports. (:issue:`1240`, :issue:`1266`)
 - Stub missing line coverage for branches in LLVM source based code coverage format. (:issue:`1245`)
 - Add support for TOML files with :option:`--config` (:issue:`1258`)
+- TODO: merge lines up front = better performance???
 
 Bug fixes and small improvements:
 
