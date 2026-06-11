@@ -215,6 +215,7 @@ def process_gcov_json_data(
         suspicious_hits_threshold=options.gcov_suspicious_hits_threshold,
         source_encoding=options.source_encoding,
         activate_trace_logging=activate_trace_logging,
+        merge_options=get_merge_mode_from_options(options),
     ):
         activate_trace_logging = not is_file_excluded(
             "trace",
@@ -309,6 +310,7 @@ def process_gcov_text_data(
         suspicious_hits_threshold=options.gcov_suspicious_hits_threshold,
         activate_trace_logging=activate_trace_logging,
         use_existing_files=options.gcov_use_existing_files,
+        merge_options=get_merge_mode_from_options(options),
     )
 
     if activate_trace_logging:

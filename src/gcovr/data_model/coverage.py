@@ -90,7 +90,7 @@ from .coverage_dict import (
     LinecovCollectionKeyType,
     LinecovKeyType,
 )
-from .merging import DEFAULT_MERGE_OPTIONS, MergeOptions
+from .merging import DEFAULT_MERGE_OPTIONS, MergeOptions, MergeLineOption
 from .stats import CoverageStat, DecisionCoverageStat, SummarizedStats
 
 
@@ -1351,6 +1351,7 @@ class LineCoverage(CoverageBase):
     def deserialize(
         cls,
         filecov: FileCoverage,
+        merge_options: MergeOptions,
         get_data_sources: Callable[[dict[str, Any]], set[tuple[str, ...]]],
         data_dict: dict[str, Any],
     ) -> LineCoverage:
@@ -1363,6 +1364,7 @@ class LineCoverage(CoverageBase):
             block_ids=data_dict.get("block_ids"),
             md5=data_dict.get("gcovr/md5"),
             excluded=data_dict.get(GCOVR_EXCLUDED, False),
+            options=merge_options,
         )
 
         for data_dict_branch in data_dict["branches"]:
@@ -1414,6 +1416,41 @@ class LineCoverage(CoverageBase):
             self.raise_merge_error("Function name must be equal.", other)
 
         # pylint: disable=protected-access
+        if options.lines_opts != MergeLineOption.NO and len(
+            self._branches.keys()
+        ) != len(other._branches.keys()):
+            if options.lines_opts == MergeLineOption.LAZY:
+                LOGGER.warning(
+                    "branch condition count must be equal (%s != %s).",
+                    len(self._branches.keys()),
+                    len(other._branches.keys()),
+                )
+            else:
+                self.raise_merge_error(
+                    f"branch condition count must be equal ({len(self._branches.keys())} != {len(other._branches.keys())}).\n"
+                    "\tYou can run gcovr with --merge-lines=MERGE_LINES to control this behaviour.\n"
+                    "\tThe available values for MERGE_LINES are described in the documentation.",
+                    other,
+                )
+
+        if (
+            options.lines_opts != MergeLineOption.NO
+            and self._branches.keys() != other._branches.keys()
+        ):
+            if options.lines_opts == MergeLineOption.LAZY:
+                LOGGER.warning(
+                    "branch block_ids must match (%s != %s).",
+                    self._branches.keys(),
+                    other._branches.keys(),
+                )
+            else:
+                self.raise_merge_error(
+                    f"branch block_ids must match ({self._branches.keys()} != {other._branches.keys()}).\n"
+                    "\tYou can run gcovr with --merge-lines=MERGE_LINES to control this behaviour.\n"
+                    "\tThe available values for MERGE_LINES are described in the documentation.",
+                    other,
+                )
+
         self._branches.merge(other._branches, options)
         self._conditions.merge(other._conditions, options)
         self._calls.merge(other._calls, options)
@@ -1843,7 +1880,9 @@ class LineCoverageCollection(CoverageBase):
         else:
             yield from self.linecov(sort=sort)
 
-    def merge_lines(self, *, replace: bool = False) -> LineCoverageCollection:
+    def merge_lines(
+        self, merge_options: MergeOptions, *, replace: bool = False
+    ) -> LineCoverageCollection:
         """Merge line coverage if there are several items for same line."""
         if len(self) == 1:
             return self
@@ -1863,6 +1902,7 @@ class LineCoverageCollection(CoverageBase):
         )
         merged_linecov = merged_linecov_collection.insert_line_coverage(
             data_sources,
+            options=merge_options,
             count=sum(
                 linecov.count for linecov in self.linecov() if linecov.is_reportable
             ),
@@ -1987,7 +2027,7 @@ class LineCoverageCollection(CoverageBase):
     def insert_line_coverage(
         self,
         data_sources: str | set[tuple[str, ...]],
-        options: MergeOptions = DEFAULT_MERGE_OPTIONS,
+        options: MergeOptions,
         *,
         count: int,
         function_name: str | None,
@@ -1999,7 +2039,9 @@ class LineCoverageCollection(CoverageBase):
             self,
             data_sources,
             count=count,
-            function_name=function_name,
+            function_name=function_name
+            if options.lines_opts == MergeLineOption.NO
+            else None,
             block_ids=block_ids,
             excluded=excluded,
         )
@@ -2193,7 +2235,7 @@ class FunctionCoverage(CoverageBase):
 
         functioncov = filecov.insert_function_coverage(
             get_data_sources(data_dict),
-            merge_options,
+            options=merge_options,
             mangled_name=data_dict.get("name"),
             demangled_name=data_dict.get("demangled_name"),
             lineno=data_dict["lineno"],
@@ -2546,7 +2588,9 @@ class FileCoverage(CoverageBase):
             filename=filename,
         )
         for data_dict_line in data_dict["lines"]:
-            LineCoverage.deserialize(filecov, get_data_sources, data_dict_line)
+            LineCoverage.deserialize(
+                filecov, merge_options, get_data_sources, data_dict_line
+            )
         for data_dict_function in data_dict["functions"]:
             FunctionCoverage.deserialize(
                 filecov, merge_options, get_data_sources, data_dict_function
@@ -2644,20 +2688,6 @@ class FileCoverage(CoverageBase):
             raise SanityCheckError("Unknown line to remove.")
         del self._lines[lineno]
 
-    def merge_lines(self, activate_trace_logging: bool) -> None:
-        """Merge line coverage if there are several items for same line."""
-        merged_lines = []
-        for linecov_collection in self.lines(sort=True):
-            merged_linecov = linecov_collection.merge_lines(replace=True)
-            if merged_linecov is not linecov_collection:
-                merged_lines.append(linecov_collection.lineno)
-        if activate_trace_logging and merged_lines:
-            LOGGER.trace(
-                "%s: Merged line coverage objects for lines: %s",
-                self.location,
-                ", ".join(str(lineno) for lineno in merged_lines),
-            )
-
     def has_linecov(self) -> bool:
         """Test if there are line coverage objects available."""
         return any(linecov_collection for linecov_collection in self.lines())
@@ -2687,7 +2717,7 @@ class FileCoverage(CoverageBase):
     def insert_line_coverage(
         self,
         data_sources: str | set[tuple[str, ...]],
-        options: MergeOptions = DEFAULT_MERGE_OPTIONS,
+        options: MergeOptions,
         *,
         lineno: int,
         count: int,
@@ -2707,18 +2737,22 @@ class FileCoverage(CoverageBase):
             self._lines[key] = linecov_collection
             self._lines[key].parent = self
 
+        ffunction_name = (
+            function_name if options.lines_opts == MergeLineOption.NO else None
+        )
+
         linecov = self._lines[key].insert_line_coverage(
             data_sources,
             options,
             count=count,
-            function_name=function_name,
+            function_name=ffunction_name,
             block_ids=block_ids,
             excluded=excluded,
         )
-        if function_name is not None:
-            if function_name not in self.__linecov_by_function:
-                self.__linecov_by_function[function_name] = list[LineCoverage]()
-            self.__linecov_by_function[function_name].append(linecov)
+        if ffunction_name is not None:
+            if ffunction_name not in self.__linecov_by_function:
+                self.__linecov_by_function[ffunction_name] = list[LineCoverage]()
+            self.__linecov_by_function[ffunction_name].append(linecov)
 
         return linecov
 
@@ -2735,7 +2769,7 @@ class FileCoverage(CoverageBase):
     def insert_function_coverage(
         self,
         data_sources: str | set[tuple[str, ...]],
-        options: MergeOptions = DEFAULT_MERGE_OPTIONS,
+        options: MergeOptions,
         *,
         mangled_name: str | None,
         demangled_name: str | None,

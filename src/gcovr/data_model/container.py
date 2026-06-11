@@ -22,7 +22,6 @@ import os
 import re
 from typing import Any, Iterator, Literal, ValuesView, overload
 
-from ..filter import is_file_excluded
 from ..logging import LOGGER
 from ..options import Options
 from ..utils import commonpath, force_unix_separator
@@ -349,22 +348,6 @@ class CoverageContainer:
     def filename(self) -> str:
         """Helpful function for when we use this DirectoryCoverage in a union with FileCoverage"""
         return self.dirname
-
-    def merge_lines(self, options: Options) -> None:
-        """Merge line coverage for same line number. Remove the function information on merged lines."""
-        self._stats = None
-        for value in self.values():
-            if isinstance(value, FileCoverage):
-                value.merge_lines(
-                    is_file_excluded(
-                        "trace",
-                        value.filename,
-                        options.trace_include_filter,
-                        options.trace_exclude_filter,
-                    )
-                )
-            else:
-                value.merge_lines(options)
 
     def merge(self, other: CoverageContainer, options: MergeOptions) -> None:
         """

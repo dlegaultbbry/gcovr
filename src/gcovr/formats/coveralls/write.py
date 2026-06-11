@@ -26,6 +26,7 @@ import shutil
 import subprocess  # nosec # Commands are trusted.
 from typing import Any
 
+from gcovr.data_model.merging import MergeOptions, MergeLineOption
 from ...data_model.container import CoverageContainer
 from ...data_model.coverage import FileCoverage
 from ...exceptions import SanityCheckError
@@ -203,7 +204,11 @@ def _make_source_file(filecov: FileCoverage, options: Options) -> dict[str, Any]
         # Comment lines are not collected in `covdata`, but must
         # be reported to coveralls (fill missing lines)
         _extend_with_none(coverage, linecov_collection.lineno - 1)
-        linecov_collection = linecov_collection.merge_lines()
+        linecov_collection = linecov_collection.merge_lines(
+            merge_options=MergeOptions(
+                lines_opts=MergeLineOption.LAZY
+            )  # Silently force merging of data
+        )
         linecov = list(linecov_collection.linecov())[0]
         if linecov_collection.is_reportable:
             coverage.append(linecov.count)

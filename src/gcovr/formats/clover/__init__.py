@@ -33,6 +33,7 @@ class CloverHandler(BaseHandler):
             "json_compare",
             # Global options used for merging.
             "merge_mode_functions",
+            "merge_lines",
             # Local options
             GcovrConfigOption(
                 "clover",

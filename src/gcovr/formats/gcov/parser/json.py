@@ -36,7 +36,7 @@ from typing import Any, Iterator
 from gcovr.utils import get_md5_hexdigest, read_source_file
 
 from ....data_model.coverage import FileCoverage
-from ....data_model.merging import FUNCTION_MAX_LINE_MERGE_OPTIONS, MergeOptions
+from ....data_model.merging import MergeOptions
 from ....filter import Filter, is_file_excluded
 from ....logging import LOGGER
 from .common import (
@@ -57,6 +57,7 @@ def parse_coverage(
     ignore_parse_errors: set[str] | None,
     suspicious_hits_threshold: int = SUSPICIOUS_COUNTER,
     activate_trace_logging: bool = False,
+    merge_options: MergeOptions,
 ) -> Iterator[tuple[FileCoverage, list[str]]]:
     """Process a GCOV JSON output."""
 
@@ -98,6 +99,7 @@ def parse_coverage(
                 ignore_parse_errors=ignore_parse_errors,
                 suspicious_hits_threshold=suspicious_hits_threshold,
                 activate_trace_logging=activate_trace_logging,
+                merge_options=merge_options,
             ),
             encoded_source_lines,
         )
@@ -112,6 +114,7 @@ def _parse_file_node(
     ignore_parse_errors: set[str] | None,
     suspicious_hits_threshold: int = SUSPICIOUS_COUNTER,
     activate_trace_logging: bool = False,
+    merge_options: MergeOptions,
 ) -> FileCoverage:
     """
     Extract coverage data from a json gcov report.
@@ -149,6 +152,7 @@ def _parse_file_node(
             )
         linecov = filecov.insert_line_coverage(
             str(data_fname),
+            options=merge_options,
             lineno=line["line_number"],
             count=check_hits(
                 line["count"],
@@ -215,7 +219,7 @@ def _parse_file_node(
 
         filecov.insert_function_coverage(
             str(data_fname),
-            MergeOptions(func_opts=FUNCTION_MAX_LINE_MERGE_OPTIONS),
+            options=merge_options,
             mangled_name=function["name"],
             demangled_name=function["demangled_name"],
             lineno=function["start_line"],

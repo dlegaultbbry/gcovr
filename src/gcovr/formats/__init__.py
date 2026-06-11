@@ -148,9 +148,6 @@ def read_reports(options: Options) -> CoverageContainer:
     LOGGER.debug("Removing directories with only one child...")
     covdata.collapse_directories_with_single_child()
 
-    if options.merge_lines:
-        covdata.merge_lines(options)
-
     return covdata
 
 

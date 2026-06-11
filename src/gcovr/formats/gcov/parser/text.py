@@ -260,6 +260,7 @@ def parse_coverage(
     suspicious_hits_threshold: int = SUSPICIOUS_COUNTER,
     activate_trace_logging: bool = False,
     use_existing_files: bool = False,
+    merge_options: MergeOptions,
 ) -> tuple[FileCoverage, list[str]]:
     """
     Extract coverage data from a gcov report.
@@ -355,6 +356,7 @@ def parse_coverage(
                 line,
                 filecov=filecov,
                 activate_trace_logging=activate_trace_logging,
+                merge_options=merge_options,
             )
         except Exception as ex:  # pylint: disable=broad-except
             lines_with_errors.append((raw_line, ex))
@@ -487,12 +489,13 @@ def _gather_coverage_from_line(
     *,
     filecov: FileCoverage,
     activate_trace_logging: bool,
+    merge_options: MergeOptions,
 ) -> _ParserState:
     """
     Interpret a Line, updating the FileCoverage, and transitioning ParserState.
 
     The function handles all possible Line variants, and dies otherwise:
-    >>> _gather_coverage_from_line(_ParserState(), "illegal line type", filecov=..., activate_trace_logging=...)
+    >>> _gather_coverage_from_line(_ParserState(), "illegal line type", filecov=..., activate_trace_logging=..., merge_options=...)
     Traceback (most recent call last):
     AssertionError: Unexpected line type: 'illegal line type'
     """
@@ -507,7 +510,7 @@ def _gather_coverage_from_line(
                 name, count, blocks = function
                 filecov.insert_function_coverage(
                     filecov.data_sources,
-                    MergeOptions(func_opts=FUNCTION_MAX_LINE_MERGE_OPTIONS),
+                    options=merge_options,
                     mangled_name=name,
                     demangled_name=None,
                     lineno=lineno,
@@ -557,6 +560,7 @@ def _gather_coverage_from_line(
 
             linecov = filecov.insert_line_coverage(
                 filecov.data_sources,
+                options=merge_options,
                 lineno=lineno,
                 count=raw_count,
                 function_name=state.function_name,

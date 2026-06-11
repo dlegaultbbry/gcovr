@@ -34,6 +34,7 @@ class JsonHandler(BaseHandler):
             "verbose",
             # Global options used for merging.
             "merge_mode_functions",
+            "merge_lines",
             "show_decision",
             # Local options
             GcovrConfigOption(

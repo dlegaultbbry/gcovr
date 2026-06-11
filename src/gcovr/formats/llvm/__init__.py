@@ -53,6 +53,7 @@ class LlvmHandler(BaseHandler):
             "exclude_pattern_prefix",
             "warn_excluded_lines_with_hits",
             "merge_mode_functions",
+            "merge_lines",
             # Local options
             GcovrConfigOption(
                 "llvm_profdata_cmd",
