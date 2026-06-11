@@ -20,6 +20,7 @@
 # cspell:ignore getpreferredencoding getfixture caplog
 
 from __future__ import annotations
+from gcovr.data_model.merging import MergeLineOption
 from argparse import _ArgumentGroup, ArgumentParser, ArgumentTypeError, SUPPRESS
 from inspect import isclass
 from locale import getpreferredencoding
@@ -833,13 +834,15 @@ GCOVR_CONFIG_OPTIONS = [
     GcovrConfigOption(
         "merge_lines",
         ["--merge-lines"],
+        metavar="MERGE_LINES",
         group="gcov_options",
+        choices=tuple(c.value for c in MergeLineOption),
+        default="no",
         help=(
             "Merge line coverage for same line coming from different functions, "
             "e.g. template instances. The branches, conditions and calls are merged "
             "accordingly."
         ),
-        action="store_true",
     ),
     GcovrConfigOption(
         "exclude_function_lines",

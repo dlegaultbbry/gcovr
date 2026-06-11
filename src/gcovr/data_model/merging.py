@@ -18,13 +18,14 @@
 # ****************************************************************************
 
 from dataclasses import dataclass, field
+from enum import Enum
 
 from ..options import Options
 
 
 @dataclass
 class MergeFunctionOptions:
-    """Data class to store the function merge options."""
+    """Data class to store the merge mode function options."""
 
     ignore_function_lineno: bool = False
     merge_function_use_line_zero: bool = False
@@ -52,12 +53,21 @@ SEPARATE_FUNCTION_MERGE_OPTIONS = MergeFunctionOptions(
 )
 
 
+class MergeLineOption(Enum):
+    """Enumeration for merge lines option."""
+
+    NO = "no"
+    LAZY = "lazy"
+    STRICT = "strict"
+
+
 @dataclass
 class MergeOptions:
     """Data class to store the merge options."""
 
     json_compare: bool = False
     func_opts: MergeFunctionOptions = field(default_factory=MergeFunctionOptions)
+    lines_opts: MergeLineOption = MergeLineOption.NO
 
 
 DEFAULT_MERGE_OPTIONS = MergeOptions()
@@ -81,6 +91,11 @@ def get_merge_mode_from_options(
     elif options.merge_mode_functions == "separate":
         merge_opts.func_opts = SEPARATE_FUNCTION_MERGE_OPTIONS
     else:
-        raise AssertionError("Unknown functions merge mode.")
+        raise AssertionError("Unknown merge mode functions option.")
+
+    if options.merge_lines in (c.value for c in MergeLineOption):
+        merge_opts.lines_opts = MergeLineOption(options.merge_lines)
+    else:
+        raise AssertionError("Unknown merge lines option.")
 
     return merge_opts
