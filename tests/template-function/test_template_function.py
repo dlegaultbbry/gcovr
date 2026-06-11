@@ -41,7 +41,7 @@ def test_template_function(gcovr_test_exec: "GcovrTestExec") -> None:
         "--json=coverage.json",
     )
     gcovr_test_exec.gcovr(
-        "--merge-lines",
+        "--merge-lines=lazy",
         "--decision",
         "--json-pretty",
         "--json=coverage.merged.json",
@@ -58,7 +58,7 @@ def test_template_function(gcovr_test_exec: "GcovrTestExec") -> None:
     )
     gcovr_test_exec.gcovr(
         "--json-add-tracefile=coverage.json",
-        "--merge-lines",
+        "--merge-lines=lazy",
         "--decision",
         "--html-self-contained",
         "--html-single-page",
@@ -69,7 +69,7 @@ def test_template_function(gcovr_test_exec: "GcovrTestExec") -> None:
     gcovr_test_exec.gcovr("--json-add-tracefile=coverage.json", "--txt=coverage.txt")
     gcovr_test_exec.gcovr(
         "--json-add-tracefile=coverage.json",
-        "--merge-lines",
+        "--merge-lines=lazy",
         "--txt=coverage.merged.txt",
     )
     gcovr_test_exec.compare_txt()
@@ -82,7 +82,7 @@ def test_template_function(gcovr_test_exec: "GcovrTestExec") -> None:
     )
     gcovr_test_exec.gcovr(
         "--json-add-tracefile=coverage.json",
-        "--merge-lines",
+        "--merge-lines=lazy",
         "--cobertura-pretty",
         "--cobertura",
         "cobertura.merged.xml",
@@ -97,7 +97,7 @@ def test_template_function(gcovr_test_exec: "GcovrTestExec") -> None:
     )
     gcovr_test_exec.gcovr(
         "--json-add-tracefile=coverage.json",
-        "--merge-lines",
+        "--merge-lines=lazy",
         "--coveralls-pretty",
         "--coveralls",
         "coveralls.merged.json",
@@ -109,7 +109,7 @@ def test_template_function(gcovr_test_exec: "GcovrTestExec") -> None:
     )
     gcovr_test_exec.gcovr(
         "--json-add-tracefile=coverage.json",
-        "--merge-lines",
+        "--merge-lines=lazy",
         "--jacoco",
         "jacoco.merged.xml",
     )
@@ -120,7 +120,7 @@ def test_template_function(gcovr_test_exec: "GcovrTestExec") -> None:
     )
     gcovr_test_exec.gcovr(
         "--json-add-tracefile=coverage.json",
-        "--merge-lines",
+        "--merge-lines=lazy",
         "--lcov",
         "coverage.merged.lcov",
     )
@@ -131,7 +131,7 @@ def test_template_function(gcovr_test_exec: "GcovrTestExec") -> None:
     )
     gcovr_test_exec.gcovr(
         "--json-add-tracefile=coverage.json",
-        "--merge-lines",
+        "--merge-lines=lazy",
         "--sonarqube",
         "sonarqube.merged.xml",
     )
@@ -160,7 +160,7 @@ def test_template_function_llvm_profdata(  # type: ignore[no-untyped-def]
     )
     process = gcovr_test_exec.gcovr(
         "--verbose",
-        "--merge-lines",
+        "--merge-lines=lazy",
         "--decision",
         "--llvm-cov-binary=./testcase",
         "--json-pretty",

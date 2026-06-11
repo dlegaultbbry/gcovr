@@ -20,6 +20,7 @@
 # pylint: disable=missing-function-docstring,missing-module-docstring
 # cspell:ignore getpreferredencoding
 
+from gcovr.data_model.merging import DEFAULT_MERGE_OPTIONS
 from locale import getpreferredencoding
 import logging
 import re
@@ -329,6 +330,7 @@ def test_gcov_8(capsys: pytest.CaptureFixture[str], source_filename: str) -> Non
         lines=lines,
         ignore_parse_errors=None,
         activate_trace_logging=True,
+        merge_options=DEFAULT_MERGE_OPTIONS,
     )
 
     apply_all_exclusions(
@@ -370,6 +372,7 @@ def test_unknown_tags(caplog: pytest.LogCaptureFixture, ignore_errors: bool) -> 
             filename="foo.c",
             lines=lines,
             ignore_parse_errors=set(["all"]) if ignore_errors else None,
+            merge_options=DEFAULT_MERGE_OPTIONS,
         )
         return coverage
 
@@ -415,6 +418,7 @@ def test_pathologic_codeline(caplog: pytest.LogCaptureFixture) -> None:
             filename="foo.c",
             lines=lines,
             ignore_parse_errors=None,
+            merge_options=DEFAULT_MERGE_OPTIONS,
         )
 
     messages = caplog.record_tuples
@@ -471,6 +475,7 @@ def test_exception_during_coverage_processing(caplog: pytest.LogCaptureFixture) 
                 lines,
                 filename="test.cpp",
                 ignore_parse_errors=None,
+                merge_options=DEFAULT_MERGE_OPTIONS,
             )
 
     # check that this is our exception
@@ -521,6 +526,7 @@ def test_trailing_function_tag() -> None:
         source.splitlines(),
         filename="test.cpp",
         ignore_parse_errors=None,
+        merge_options=DEFAULT_MERGE_OPTIONS,
     )
 
     assert [functioncov.name for functioncov in coverage.functioncov()] == [
@@ -579,6 +585,7 @@ def test_branch_exclusion(flags: str) -> None:
         source.splitlines(),
         filename="example.cpp",
         ignore_parse_errors=None,
+        merge_options=DEFAULT_MERGE_OPTIONS,
     )
 
     apply_all_exclusions(
@@ -622,6 +629,7 @@ def test_negative_branch_count() -> None:
             source.splitlines(),
             filename="example.cpp",
             ignore_parse_errors=None,
+            merge_options=DEFAULT_MERGE_OPTIONS,
         )
 
 
@@ -674,6 +682,7 @@ def test_negative_branch_count_json() -> None:
                 include_filter=tuple([AlwaysMatchFilter()]),
                 exclude_filter=tuple(),
                 ignore_parse_errors=set(),
+                merge_options=DEFAULT_MERGE_OPTIONS,
             )
         )
 
@@ -773,6 +782,7 @@ def test_negative_branch_count_ignored_json(
             include_filter=tuple([AlwaysMatchFilter()]),
             exclude_filter=tuple(),
             ignore_parse_errors=set([flag]),
+            merge_options=DEFAULT_MERGE_OPTIONS,
         )
     )
 
@@ -822,6 +832,7 @@ def test_negative_line_count_ignored(
         source.splitlines(),
         filename="example.cpp",
         ignore_parse_errors=set([flag]),
+        merge_options=DEFAULT_MERGE_OPTIONS,
     )
 
     covered_lines = {
@@ -870,6 +881,7 @@ def test_negative_branch_count_ignored() -> None:
             source.splitlines(),
             filename="example.cpp",
             ignore_parse_errors=set(),
+            merge_options=DEFAULT_MERGE_OPTIONS,
         )
 
     coverage, _ = text.parse_coverage(
@@ -877,6 +889,7 @@ def test_negative_branch_count_ignored() -> None:
         source.splitlines(),
         filename="example.cpp",
         ignore_parse_errors=set(["negative_hits.warn_once_per_file"]),
+        merge_options=DEFAULT_MERGE_OPTIONS,
     )
 
     covered_branches = {
@@ -908,6 +921,7 @@ def test_suspicious_branch_count() -> None:
             source.splitlines(),
             filename="example.cpp",
             ignore_parse_errors=set(),
+            merge_options=DEFAULT_MERGE_OPTIONS,
         )
 
 
@@ -940,6 +954,7 @@ def test_suspicious_line_count_ignored(
         source.splitlines(),
         filename="example.cpp",
         ignore_parse_errors=set([flag]),
+        merge_options=DEFAULT_MERGE_OPTIONS,
     )
 
     covered_lines = {
@@ -988,6 +1003,7 @@ def test_suspicious_branch_count_ignored() -> None:
             source.splitlines(),
             filename="example.cpp",
             ignore_parse_errors=set(),
+            merge_options=DEFAULT_MERGE_OPTIONS,
         )
 
     coverage, _ = text.parse_coverage(
@@ -995,6 +1011,7 @@ def test_suspicious_branch_count_ignored() -> None:
         source.splitlines(),
         filename="example.cpp",
         ignore_parse_errors=set(["suspicious_hits.warn_once_per_file"]),
+        merge_options=DEFAULT_MERGE_OPTIONS,
     )
 
     covered_branches = {
@@ -1030,6 +1047,7 @@ def test_function_exclusion(flags: str) -> None:
         source.splitlines(),
         filename="example.cpp",
         ignore_parse_errors=None,
+        merge_options=DEFAULT_MERGE_OPTIONS,
     )
 
     apply_all_exclusions(
@@ -1067,6 +1085,7 @@ def test_noncode_lines() -> None:
             lines,
             filename="example.cpp",
             ignore_parse_errors=None,
+            merge_options=DEFAULT_MERGE_OPTIONS,
         )
 
         options = ExclusionOptions(

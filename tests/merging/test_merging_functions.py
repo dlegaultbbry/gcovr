@@ -31,11 +31,81 @@ from tests.conftest import IS_LINUX, GcovrTestExec
 
 @pytest.mark.skipif(
     not IS_LINUX,
-    reason="Merging of branches is independent of OS and we do not want to have separate data for Windows and Darwin.",
+    reason="Merging of lines is independent of OS and we do not want to have separate data for Windows and Darwin.",
+)
+def test_different_conditions_strict(  # type: ignore[no-untyped-def]
+    gcovr_test_exec: "GcovrTestExec",
+    caplog: pytest.LogCaptureFixture,
+    check,
+) -> None:
+    """Test merging different branch conditions information for same line."""
+
+    gcovr_test_exec.copy_source(Path("source", "different-conditions"))
+
+    def outputs() -> typing.Iterable[tuple[int, Path]]:
+        """Build the executables."""
+        for postfix in [1, 2]:
+            yield (postfix, gcovr_test_exec.output_dir / f"build{postfix}")
+
+    for postfix, build_dir in outputs():
+        build_dir.mkdir()
+        additional_options = []
+        if postfix == 2:
+            additional_options.append("-DTWO_CONDITIONS")
+        gcovr_test_exec.cxx_link(
+            "testcase",
+            *additional_options,
+            "../main.c",
+            cwd=build_dir,
+        )
+
+    gcovr_test_exec.run_parallel_from_directories(
+        "./testcase",
+        cwd=[build_dir for _, build_dir in outputs()],
+    )
+
+    process = gcovr_test_exec.gcovr(
+        "--merge-lines=strict",
+        "--json-trace-data-source",
+        "--json-pretty",
+        "--json=coverage.json",
+        use_main=True,
+    )
+
+    with check:
+        assert process.returncode == 64, "Read error."
+        messages = caplog.record_tuples
+        assert len(messages) == 2
+        assert messages[0][1] == logging.ERROR
+        for line in messages[0][2].splitlines():
+            if re.match(
+                r"gcovr.exceptions.GcovrMergeAssertionError: .+main.c:12 branch condition count must be equal \(2 != 4\)",
+                line,
+            ):
+                break
+        else:
+            raise AssertionError("Missing expected output.")
+
+
+@pytest.mark.skipif(
+    not IS_LINUX,
+    reason="Merging of lines is independent of OS and we do not want to have separate data for Windows and Darwin.",
+)
+@pytest.mark.parametrize(
+    "merge_lines",
+    [
+        "no",
+        "lazy",
+    ],
 )
 @pytest.mark.json
-def test_different_branches(gcovr_test_exec: "GcovrTestExec") -> None:
-    """Test merging different branch information for same line."""
+def test_different_conditions(  # type: ignore[no-untyped-def]
+    gcovr_test_exec: "GcovrTestExec",
+    caplog: pytest.LogCaptureFixture,
+    merge_lines: str,
+    check,
+) -> None:
+    """Test merging different branch conditions information for same line."""
 
     def outputs() -> typing.Iterable[tuple[int, Path]]:
         """Build the executables."""
@@ -58,12 +128,21 @@ def test_different_branches(gcovr_test_exec: "GcovrTestExec") -> None:
         "./testcase",
         cwd=[build_dir for _, build_dir in outputs()],
     )
+
     gcovr_test_exec.gcovr(
+        f"--merge-lines={merge_lines}",
         "--json-trace-data-source",
         "--json-pretty",
         "--json=coverage.json",
+        use_main=True,
     )
     gcovr_test_exec.compare_json()
+
+    with check:
+        if merge_lines == "lazy":
+            messages = caplog.record_tuples
+            assert len(messages) >= 1
+            assert messages[0][2] == "branch condition count must be equal (2 != 4)."
 
 
 @pytest.mark.skipif(
@@ -235,3 +314,119 @@ def test_different_functions(
         "--sonarqube=sonarqube.xml",
     )
     gcovr_test_exec.compare_sonarqube()
+
+
+@pytest.mark.skipif(
+    not IS_LINUX,
+    reason="Merging of lines is independent of OS and we do not want to have separate data for Windows and Darwin.",
+)
+def test_inconsistent_branches_strict(  # type: ignore[no-untyped-def]
+    gcovr_test_exec: "GcovrTestExec",
+    caplog: pytest.LogCaptureFixture,
+    check,
+) -> None:
+    """Test merging different branch conditions information for same line."""
+
+    gcovr_test_exec.copy_source(Path("source", "inconsistent-branches"))
+
+    def outputs() -> typing.Iterable[tuple[int, Path]]:
+        """Build the executables."""
+        for postfix in [1, 2]:
+            yield (postfix, gcovr_test_exec.output_dir / f"build{postfix}")
+
+    for postfix, build_dir in outputs():
+        build_dir.mkdir()
+        additional_options = []
+        if postfix == 2:
+            additional_options.append("-DBUILTIN_ALLOCA")
+        gcovr_test_exec.cxx_link(
+            "testcase",
+            *additional_options,
+            "../main.c",
+            cwd=build_dir,
+        )
+
+    gcovr_test_exec.run_parallel_from_directories(
+        "./testcase",
+        cwd=[build_dir for _, build_dir in outputs()],
+    )
+
+    process = gcovr_test_exec.gcovr(
+        "--merge-lines=strict",
+        "--json-trace-data-source",
+        "--json-pretty",
+        "--json=coverage.json",
+        use_main=True,
+    )
+
+    with check:
+        assert process.returncode == 64, "Read error."
+        messages = caplog.record_tuples
+        assert len(messages) == 2
+        assert messages[0][1] == logging.ERROR
+        for line in messages[0][2].splitlines():
+            if re.match(
+                r"gcovr.exceptions.GcovrMergeAssertionError: .+main.c:25 branch block_ids must match",
+                line,
+            ):
+                break
+        else:
+            raise AssertionError("Missing expected output.")
+
+
+@pytest.mark.skipif(
+    not IS_LINUX,
+    reason="Merging of branches is independent of OS and we do not want to have separate data for Windows and Darwin.",
+)
+@pytest.mark.parametrize(
+    "merge_lines",
+    [
+        "no",
+        "lazy",
+    ],
+)
+@pytest.mark.json
+def test_inconsistent_branches(  # type: ignore[no-untyped-def]
+    gcovr_test_exec: "GcovrTestExec",
+    caplog: pytest.LogCaptureFixture,
+    merge_lines: str,
+    check,
+) -> None:
+    """Test merging inconsistent branch information for same line."""
+
+    def outputs() -> typing.Iterable[tuple[int, Path]]:
+        """Build the executables."""
+        for postfix in range(1, 5):
+            yield (postfix, gcovr_test_exec.output_dir / f"build{postfix}")
+
+    for postfix, build_dir in outputs():
+        build_dir.mkdir()
+        additional_options = []
+        if postfix in [3, 4]:
+            additional_options.append("-DBUILTIN_ALLOCA")
+        gcovr_test_exec.cxx_link(
+            "testcase",
+            *additional_options,
+            "../main.c",
+            cwd=build_dir,
+        )
+
+    gcovr_test_exec.run_parallel_from_directories(
+        "./testcase",
+        cwd=[build_dir for _, build_dir in outputs()],
+    )
+
+    gcovr_test_exec.gcovr(
+        f"--merge-lines={merge_lines}",
+        "--json-trace-data-source",
+        "--json-pretty",
+        "--json=coverage.json",
+        use_main=True,
+    )
+    gcovr_test_exec.compare_json()
+
+    with check:
+        if merge_lines == "lazy":
+            messages = caplog.record_tuples
+            assert len(messages) >= 1
+            assert messages[0][2].startswith("branch block_ids must match")

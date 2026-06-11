@@ -389,10 +389,10 @@ class GcovrTestCompare:
                     else:
                         missing_files.add(test_file.name)
 
-        assert seen_files, f"Reference files for pattern {' '.join(output_pattern)}."
         assert not missing_files, (
             f"Missing test files for pattern {' '.join(output_pattern)}: {', '.join(missing_files)}"
         )
+        assert seen_files, f"Reference files for pattern {' '.join(output_pattern)}."
 
     def __update_reference_data(  # pragma: no cover
         self, reference_file: Path, content: str, encoding: str
