@@ -26,6 +26,7 @@ New features and notable changes:
 Bug fixes and small improvements:
 
 - Fix runtime problem introduced with 8.4. (:issue:`1270`)
+- Fix boost HTML details output. (:issue:`1274`)
 
 Documentation:
 
@@ -132,7 +133,6 @@ Bug fixes and small improvements:
 - Change internal behavior of :option:`--exclude-function-lines` to exclude the line of function definition
   instead of removing it completely. (:issue:`1214`)
 - Ensure that all functions have a line coverage element in LCOV report. (:issue:`1212`)
-- Fix boost HTML details output. (:issue:`1274`)
 
 Internal changes:
 
