@@ -148,10 +148,10 @@ class CssRenderer:
         return templates(options).get_template("style.css")
 
     @staticmethod
-    def render(options: Options, root_info: "RootInfo") -> str:
+    def render(options: Options, **data) -> str:
         """Get the rendered CSS content."""
         template = CssRenderer.__load_css_template(options)
-        return template.render(tab_size=options.html_tab_size, info=root_info)
+        return template.render(tab_size=options.html_tab_size, **data)
 
 
 class NullHighlighting:
@@ -542,7 +542,7 @@ def write_report(
             data["GCOVR_TREE_DATA"] = covdata.properties["tree_data"]["children"]
 
     LOGGER.debug("Render CSS file...")
-    css_data = CssRenderer.render(options, root_info).strip()
+    css_data = CssRenderer.render(options, **data).strip()
     if PYGMENTS_CSS_MARKER in css_data:
         LOGGER.info(
             "Skip adding of pygments styles since %r found in user stylesheet",

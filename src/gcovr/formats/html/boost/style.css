@@ -1289,17 +1289,17 @@ body.sidebar-resizing .main-content {
 /* Adjust grid when columns are hidden */
 .no-functions.no-branches .file-list-header,
 .no-functions.no-branches .file-row {
-  grid-template-columns: minmax(200px, 2fr) minmax(150px, 1fr) 116px;
+  grid-template-columns: minmax(200px, 2fr) minmax(150px, 1fr) 116px{% if SHOW_CONDITION_COVERAGE %} 116px{% endif %}{% if SHOW_DECISION %} 116px{% endif %}{% if SHOW_CALLS %} 116px{% endif %};
 }
 
 .no-functions:not(.no-branches) .file-list-header,
 .no-functions:not(.no-branches) .file-row {
-  grid-template-columns: minmax(200px, 2fr) minmax(150px, 1fr) 116px 116px;
+  grid-template-columns: minmax(200px, 2fr) minmax(150px, 1fr) 116px 116px{% if SHOW_CONDITION_COVERAGE %} 116px{% endif %}{% if SHOW_DECISION %} 116px{% endif %}{% if SHOW_CALLS %} 116px{% endif %};
 }
 
 .no-branches:not(.no-functions) .file-list-header,
 .no-branches:not(.no-functions) .file-row {
-  grid-template-columns: minmax(200px, 2fr) minmax(150px, 1fr) 116px 116px;
+  grid-template-columns: minmax(200px, 2fr) minmax(150px, 1fr) 116px 116px{% if SHOW_CONDITION_COVERAGE %} 116px{% endif %}{% if SHOW_DECISION %} 116px{% endif %}{% if SHOW_CALLS %} 116px{% endif %};
 }
 
 .file-row:nth-child(even) {
