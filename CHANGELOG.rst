@@ -26,7 +26,6 @@ New features and notable changes:
 Bug fixes and small improvements:
 
 - Fix runtime problem introduced with 8.4. (:issue:`1270`)
-- Fix boost HTML details output. (:issue:`1274`)
 - Fix boost HTML optional data (conditions, decisions, calls) output support. (:issue:`1277`)
 
 Documentation:
